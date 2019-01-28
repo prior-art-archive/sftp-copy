@@ -1,4 +1,4 @@
-# SFTP Handler
+# SFTP New File Handler
 
 This repo provides the code for the lambda function that handles new SFTP uploads. Each file uploaded via SFTP is:
 
