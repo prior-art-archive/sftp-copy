@@ -24,23 +24,24 @@ exports.handler = (event, context, callback) => {
 		uri: `${process.env.idResolverUrl}?slug=${companySlug}`,
 		json: true,
 	});
- 	const getSrcHead = new Promise((resolve, reject)=> {
- 		s3.headObject({
+	const getSrcHead = new Promise((resolve, reject)=> {
+		s3.headObject({
 			Bucket: srcBucket,
 			Key: srcKey
 		}, function(err, data) {
 			if (err) { reject(err); }
 			resolve(data);
 		});
- 	});
- 	Promise.all([getOrgId, getSrcHead])
+	});
+	Promise.all([getOrgId, getSrcHead])
 	.then(([organizationId, srcHead])=> {
 		const documentId = uuidv4();
 		const destBucket = 'assets.priorartarchive.org';
-		const destKey = `uploads/${organizationId}/${documentId}.${extension}`;
+		const destKey = `uploads/${organizationId}/${Math.floor(Math.random() * 8)}${new Date().getTime()}.${extension}`;
 		s3.copyObject({ 
 			CopySource: srcBucket + '/' + srcKey,
 			Bucket: destBucket,
+			ACL: 'public-read',
 			Key: destKey,
 			ContentType: srcHead.ContentType,
 			Metadata: {
