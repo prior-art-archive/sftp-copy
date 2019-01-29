@@ -46,8 +46,8 @@ exports.handler = (event, context, callback) => {
 			ContentType: srcHead.ContentType,
 			Metadata: {
 				...srcHead.Metadata,
-				'x-amz-meta-document-id': documentId,
-				'x-amz-meta-original-filename': srcKey.replace(`${companySlug}/`, ''),
+				'document-id': documentId,
+				'original-filename': srcKey.replace(`${companySlug}/`, ''),
 			},
 			MetadataDirective: 'REPLACE'
 		}, (copyErr, copyData)=> {
