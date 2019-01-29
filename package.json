@@ -1,5 +1,5 @@
 {
-  "name": "priorart-sftp-new-file-handler",
+  "name": "priorart-sftp-copy",
   "version": "1.0.0",
   "description": "Handler function for AWS Lambda",
   "main": "index.js",
