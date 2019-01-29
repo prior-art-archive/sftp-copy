@@ -1,6 +1,6 @@
 # SFTP New File Handler
 
-This repo provides the code for the lambda function that handles new SFTP uploads. Each file uploaded via SFTP is:
+This repo provides the code for the lambda function that handles new SFTP uploads for the Prior Art Archive. Each file uploaded via SFTP is:
 
 - Assigned a UUID,
 - Appended with metadata for UUID and original filename,
