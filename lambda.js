@@ -1,61 +1,59 @@
-var AWS = require('aws-sdk');
-var uuidv4 = require('uuid/v4');
-var request = require('request-promise');
+import AWS = from 'aws-sdk';
+import uuidv4 = from 'uuid/v4';
+import request = from 'request-promise';
+
+import logger = from './logger';
+import { DESTINATION_BUCKET } from './constants';
+import {
+	isObjectEmpty,
+	isObjectValidExtension,
+	getCompanySlug,
+	getOrganizationId,
+	getSrcHead,
+} from './utils';
 
 var s3 = new AWS.S3();
 
-exports.handler = (event, context, callback) => {
-	/* Validate file size */
-	if (event.Records[0].s3.object.size === 0) {
+exports.handler = async (event, context, callback) => {
+	const object = event.Records[0].s3.object
+	logger.info(`Processing object: ${object.key}`)
+	if (isObjectEmpty(object)) {
+		logger.error(`Cannot process upload (empty file)`)
 		return callback(null, '0 Size');
 	}
-
-	const srcBucket = process.env.sourceBucket;
-	const srcKey = event.Records[0].s3.object.key.replace(/\+/g, ' ');
-	const extension = srcKey.split('.').pop().toLowerCase();
-	const allowedExtensions = ['html', 'htm', 'pdf'];
-	if (allowedExtensions.indexOf(extension) === -1) {
+	if (!isObjectValidExtension(object)) {
+		logger.error(`Cannot process upload (invalid extension)`)
 		return callback(null, 'Invalid Extension');
 	}
+	logger.debug(`Object validations passed`)
 
-	const companySlug = event.Records[0].s3.object.key.split('/')[0];
-
-	const getOrgId = request({
-		uri: `${process.env.idResolverUrl}?slug=${companySlug}`,
-		json: true,
-	});
-	const getSrcHead = new Promise((resolve, reject)=> {
-		s3.headObject({
-			Bucket: srcBucket,
-			Key: srcKey
-		}, function(err, data) {
-			if (err) { reject(err); }
-			resolve(data);
-		});
-	});
-	Promise.all([getOrgId, getSrcHead])
-	.then(([organizationId, srcHead])=> {
-		const documentId = uuidv4();
-		const destBucket = 'assets.priorartarchive.org';
-		const destKey = `uploads/${organizationId}/${Math.floor(Math.random() * 8)}${new Date().getTime()}.${extension}`;
-		s3.copyObject({ 
-			CopySource: srcBucket + '/' + srcKey,
-			Bucket: destBucket,
-			ACL: 'public-read',
-			Key: destKey,
-			ContentType: srcHead.ContentType,
-			Metadata: {
-				...srcHead.Metadata,
-				'document-id': documentId,
-				'original-filename': srcKey.replace(`${companySlug}/`, ''),
-			},
-			MetadataDirective: 'REPLACE'
-		}, (copyErr, copyData)=> {
-			if (copyErr) { callback(copyErr, null); }
-			callback(null, `Copied ${srcKey} to ${destKey}`);
-		});
-	})
-	.catch((resolveErr)=> {
-		callback(resolveErr, null);
+	const srcBucket = process.env.sourceBucket;
+	const companySlug = getCompanySlug(object)
+	const organizationId = await getOrganizationId(companySlug)
+	const srcHead = await getSrcHead(srcBucket, srcKey)
+	const documentId = uuidv4();
+	const destBucket = DESTINATION_BUCKET;
+	const destKey = `uploads/${organizationId}/${documentId}.${extension}`;
+	logger.info(`Copying object to ${destKey}`)
+	s3.copyObject({
+		CopySource: srcBucket + '/' + srcKey,
+		Bucket: destBucket,
+		ACL: 'public-read',
+		Key: destKey,
+		ContentType: srcHead.ContentType,
+		Metadata: {
+			...srcHead.Metadata,
+			'document-id': documentId,
+			'original-filename': srcKey.replace(`${companySlug}/`, ''),
+		},
+		MetadataDirective: 'REPLACE'
+	}, (copyErr, copyData)=> {
+		if (copyErr) {
+			logger.error('Copy failed');
+			logger.error(copyErr);
+			return callback(copyErr, null);
+		}
+		logger.info('Copied ${srcKey} to ${destKey}')
+		callback(null, `Copied ${srcKey} to ${destKey}`);
 	});
 };
