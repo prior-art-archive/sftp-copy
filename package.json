@@ -4,14 +4,30 @@
   "description": "Handler function for AWS Lambda",
   "main": "index.js",
   "scripts": {
-    "test": "node test.js"
+    "build": "./node_modules/.bin/parcel build src/lambda.js --target=node --global handler -o lambda.js --bundle-node-modules --no-source-maps",
+    "package": "mkdir -p build && yarn build && zip build/deploy.zip -FSj dist/*",
+    "lint": "./node_modules/.bin/eslint 'src/**/*.js'"
   },
   "dependencies": {
+    "aws-sdk": "^2.490.0",
     "crypto-js": "^3.1.9-1",
     "https": "^1.0.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
     "uuid": "^3.3.2",
     "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.5.0",
+    "@babel/core": "^7.5.4",
+    "@babel/node": "^7.5.0",
+    "@babel/preset-env": "^7.5.4",
+    "babel-eslint": "^10.0.2",
+    "eslint": "^6.0.1",
+    "eslint-config-airbnb": "^17.1.1",
+    "eslint-plugin-import": "^2.18.0",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-react": "^7.14.2",
+    "parcel": "^1.12.3"
   }
 }
