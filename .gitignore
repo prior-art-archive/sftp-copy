@@ -1,5 +1,4 @@
 node_modules
-.DS_Store
 *.log
 .atomignore
 .info
@@ -10,3 +9,8 @@ config.js
 migrate
 dist
 .node-version
+
+.cache/
+
+# Do not store the packaged lambda deployment zips
+build/*
