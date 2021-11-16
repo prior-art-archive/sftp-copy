@@ -9,7 +9,7 @@
     "lint": "./node_modules/.bin/eslint 'src/**/*.js'"
   },
   "dependencies": {
-    "aws-sdk": "^2.490.0",
+    "aws-sdk": "^2.814.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
     "uuid": "^3.3.2",
